@@ -15,7 +15,7 @@ import { AuthController } from './auth.controller';
       }),
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, ],
   exports: [AuthService],
   controllers: [AuthController],
 })
