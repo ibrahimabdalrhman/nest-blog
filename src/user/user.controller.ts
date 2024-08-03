@@ -18,7 +18,7 @@ import { SignupDto } from 'src/auth/dto/signup.dto';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
-import { Pagination } from 'nestjs-typeorm-paginate';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { UserEntity } from './entities/user.entity';
 
 @Controller('user')
@@ -38,15 +38,17 @@ export class UserController {
     return this.userService.findAll();
   }
   @Get('all')
-  async index(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+  async getUsers(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('username') username?: string,
   ): Promise<Pagination<UserEntity>> {
-    limit = limit > 100 ? 100 : limit;
-    return this.userService.paginate({
+    const options: IPaginationOptions = {
       page,
       limit,
-    });
+    };
+    const filterUser = { username: username || '' }; 
+    return this.userService.filterByUsername(options, filterUser);
   }
   @Delete(':id')
   deleteOne(@Param() id: number) {

@@ -4,14 +4,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Observable, from } from 'rxjs';
 import { UserEntity } from './entities/user.entity';
 import { Role, User } from './interface/user.interface';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import { SignupDto } from 'src/auth/dto/signup.dto';
-import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
+import {
+  IPaginationOptions,
+  Pagination,
+  paginate,
+} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class UserService {
@@ -70,10 +74,33 @@ export class UserService {
       email: userEntity.email,
       roles: userEntity.roles as Role, // Ensure conversion to Role type
     }));
-  } 
+  }
 
-  async paginate(options: IPaginationOptions): Promise<Pagination<UserEntity>> {
-    return paginate<UserEntity>(this.userRepository, options);
+  async filterByUsername(
+    options: IPaginationOptions,
+    user: User,
+  ): Promise<Pagination<UserEntity>> {
+    const page = Number(options.page) || 1;
+    const limit = Number(options.limit) || 10;
+
+    const [results, total] = await this.userRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: 'ASC' },
+      select: ['id', 'name', 'username', 'email', 'roles'],
+      where: user.username ? { username: Like(`%${user.username}%`) } : {},
+    });
+
+    return {
+      items: results,
+      meta: {
+        totalItems: total,
+        itemCount: results.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      },
+    };
   }
 
   deleteOne(id: number): Observable<any> {
