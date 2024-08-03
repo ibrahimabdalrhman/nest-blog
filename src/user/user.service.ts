@@ -109,4 +109,10 @@ export class UserService {
   updateOne(id: number, user: User) {
     return from(this.userRepository.update(id, user));
   }
+
+  async updateAvatar(path: string, id: number) {
+    const user = await this.userRepository.findOneBy({id});
+    user.avatar = path;
+    return await this.userRepository.save(user);
+  }
 }

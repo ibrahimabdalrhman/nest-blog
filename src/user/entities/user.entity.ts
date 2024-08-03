@@ -13,5 +13,7 @@ export class UserEntity {
   @Column()
   password: string;
   @Column({ type: 'enum', enum: Role, default: Role.User })
-  roles: Role; 
+  roles: Role;
+  @Column({ nullable: true })
+  avatar: string;
 }
