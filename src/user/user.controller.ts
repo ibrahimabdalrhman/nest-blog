@@ -29,6 +29,7 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { createReadStream } from 'fs';
 import { Response } from 'express';
+import { UserIsUserGuard } from 'src/auth/guard/userIsUser.guard';
 
 @Controller('user')
 export class UserController {
@@ -68,7 +69,7 @@ export class UserController {
   deleteOne(@Param('id') id: number) {
     return this.userService.deleteOne(id);
   }
-
+  @UseGuards(JwtAuthGuard, UserIsUserGuard)
   @Patch(':id')
   updateOne(@Param('id') id: number, @Body() user: User) {
     return this.userService.updateOne(id, user);

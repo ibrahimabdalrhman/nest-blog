@@ -76,6 +76,10 @@ export class UserService {
     }));
   }
 
+  async findUserById(id: number): Promise<User> {
+    return await this.userRepository.findOneBy({ id });
+  }
+
   async filterByUsername(
     options: IPaginationOptions,
     user: User,
@@ -111,7 +115,7 @@ export class UserService {
   }
 
   async updateAvatar(path: string, id: number) {
-    const user = await this.userRepository.findOneBy({id});
+    const user = await this.userRepository.findOneBy({ id });
     user.avatar = path;
     return await this.userRepository.save(user);
   }
