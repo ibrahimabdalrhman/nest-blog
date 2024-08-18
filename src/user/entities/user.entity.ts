@@ -23,7 +23,7 @@ export class UserEntity {
   roles: Role;
   @Column({ nullable: true })
   avatar: string;
-  @OneToMany((type) => BlogEntity, (blog) => blog.auther)
+  @OneToMany((type) => BlogEntity, (blog) => blog.author)
   blogEntries: BlogEntity[];
 
   @BeforeInsert()

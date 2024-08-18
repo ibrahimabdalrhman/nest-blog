@@ -25,8 +25,8 @@ export class BlogEntity {
   }
   @Column({ default: 0 })
   likes: number;
-  @Column()
+  @Column({ nullable: true })
   headerImage: string;
   @ManyToOne((type) => UserEntity, (user) => user.blogEntries)
-  auther: UserEntity;
+  author: UserEntity;
 }

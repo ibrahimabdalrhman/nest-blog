@@ -7,6 +7,6 @@ export interface Blog {
   createdAt?: Date;
   updatesAt?: Date;
   likes?: number;
-  auther?: User;
+  author?: User;
   headerImage?: string;
 }
