@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -13,6 +15,8 @@ import {
 import { BlogService } from './blog.service';
 import { Blog } from './interfaces/blog.interface';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
+import { BlogEntity } from './entities/blog.entity';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 
 @Controller('blogs')
 export class BlogController {
@@ -24,11 +28,21 @@ export class BlogController {
   }
 
   @Get()
-  find(@Query('userId') userId: number) {
+  find(
+    @Query('userId') userId: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+  ): Promise<Pagination<BlogEntity>> {
+    const options: IPaginationOptions = {
+      page,
+      limit,
+    };
     if (userId == null) {
-      return this.blogService.findAll();
+      const filter = { body: search || '', title: search || '' };
+      return this.blogService.findAll(options, filter);
     } else {
-      return this.blogService.findByUser(userId);
+      return this.blogService.findByUser(options, userId);
     }
   }
   @Get(':id')

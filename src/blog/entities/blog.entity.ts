@@ -18,10 +18,10 @@ export class BlogEntity {
   createdAt: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  updateAt: Date;
+  updatedAt: Date;
   @BeforeUpdate()
   UpdateTimestamp() {
-    this.updateAt = new Date();
+    this.updatedAt = new Date();
   }
   @Column({ default: 0 })
   likes: number;

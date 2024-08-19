@@ -7,8 +7,9 @@ import { User } from 'src/user/interface/user.interface';
 import { Blog } from './interfaces/blog.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BlogEntity } from './entities/blog.entity';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class BlogService {
@@ -22,16 +23,72 @@ export class BlogService {
     blogEntity.author = user;
     return await this.blogRepository.save(blogEntity);
   }
-  async findAll(): Promise<Blog[]> {
-    return await this.blogRepository.find({ relations: ['author'] });
+  async findAll(
+    options: IPaginationOptions,
+    search,
+  ): Promise<Pagination<BlogEntity>> {
+    const page = Number(options.page) || 1;
+    const limit = Number(options.limit) || 10;
+    const whereConditions = [];
+
+    if (search.title) {
+      whereConditions.push({ title: Like(`%${search.title}%`) });
+    }
+
+    if (search.body) {
+      whereConditions.push({ body: Like(`%${search.body}%`) });
+    }
+    const [results, total] = await this.blogRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: 'ASC' },
+      select: [
+        'id',
+        'title',
+        'body',
+        'headerImage',
+        'likes',
+        'updatedAt',
+        'createdAt',
+      ],
+      where: whereConditions.length ? whereConditions : {},
+    });
+    return {
+      items: results,
+      meta: {
+        totalItems: total,
+        itemCount: results.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      },
+    };
   }
-  async findByUser(userId: number): Promise<Blog[]> {
-    return await this.blogRepository.find({
+  async findByUser(
+    options: IPaginationOptions,
+    userId,
+  ): Promise<Pagination<BlogEntity>> {
+    const page = Number(options.page) || 1;
+    const limit = Number(options.limit) || 10;
+    const [results, total] = await this.blogRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: 'ASC' },
       where: {
         author: { id: userId },
       },
       relations: ['author'],
     });
+    return {
+      items: results,
+      meta: {
+        totalItems: total,
+        itemCount: results.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      },
+    };
   }
   async findById(id: number): Promise<Blog> {
     return await this.blogRepository.findOne({
