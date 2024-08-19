@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { User } from 'src/user/interface/user.interface';
 import { Blog } from './interfaces/blog.interface';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -34,5 +38,44 @@ export class BlogService {
       where: { id },
       relations: ['author'],
     });
+  }
+  async updateOne(
+    id: number,
+    blogEntity: Blog,
+    loggedUserId: number,
+  ): Promise<Blog> {
+    const blog = await this.blogRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+    if (!blog) {
+      throw new NotFoundException(`Not found Blog for this id :  ${id}`);
+    }
+    if (blog.author.id !== loggedUserId) {
+      throw new UnauthorizedException(`You Not Allowed to update this Blog`);
+    }
+
+    await this.blogRepository.update(id, blogEntity);
+    const updatedBlog = await this.blogRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+    return updatedBlog;
+  }
+  async deleteOne(id: number, loggedUserId: number, loggedUserRole: string) {
+    const blog = await this.blogRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+    if (!blog) {
+      throw new NotFoundException(`Not found Blog for this id :  ${id}`);
+    }
+    if (blog.author.id !== loggedUserId) {
+      if (loggedUserRole !== 'admin') {
+        throw new UnauthorizedException(`You Not Allowed to delete this Blog`);
+      }
+    }
+
+    return await this.blogRepository.delete(id);
   }
 }
